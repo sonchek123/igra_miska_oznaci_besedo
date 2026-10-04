@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Označi besedo</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#edf3fa;color:#20304a;font-family:Arial,sans-serif;min-height:100vh;padding:40px 20px}main{max-width:920px;margin:auto}header{margin-bottom:28px}h1{font-size:clamp(30px,5vw,44px);margin:0 0 12px}header p{line-height:1.6;margin:0;color:#52627a}.card{background:white;border:1px solid #dbe3ee;border-radius:20px;padding:clamp(20px,4vw,36px);box-shadow:0 12px 40px #23395c0c}.task{font-size:21px;margin:0 0 24px;line-height:1.6}.target{display:inline-block;background:#e6edff;color:#254aac;border-radius:8px;padding:3px 14px;font-weight:bold}label{display:block;font-size:14px;color:#65738a;margin-bottom:10px}textarea{display:block;width:100%;height:180px;resize:none;border:2px solid #b9c7dc;border-radius:10px;padding:20px;font:26px/1.65 Arial,sans-serif;color:#172b48;background:#fcfdff;cursor:text;user-select:text}textarea:focus{outline:3px solid #cbd8ff;border-color:#5174cb}textarea::selection{background:#a9c6ff;color:#102d5a}.feedback{min-height:64px;margin:20px 0 12px;padding:16px;border-radius:10px;font-size:21px;font-weight:bold;background:#f2f5f9;color:#52627a}.feedback.good{background:#e7f6ec;color:#236a3c}.feedback.bad{background:#fff0eb;color:#a23e28}.bottom{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}button{border:0;border-radius:10px;background:#315bb8;color:white;font-size:17px;font-weight:bold;padding:14px 24px;cursor:pointer}button:hover{background:#23478f}button:focus-visible{outline:3px solid #8aa9ed;outline-offset:4px}.score{font-size:15px;color:#65738a}.hint{font-size:15px;line-height:1.6;color:#65738a;margin:22px 0 0}@media(max-width:550px){body{padding:24px 12px}textarea{font-size:23px;height:220px}}
+</style>
+</head>
+<body>
+<main><header><h1>Označi besedo</h1><p>Vadi označevanje besedila z miško.</p></header>
+<section class="card" aria-label="Naloga označevanja">
+<p class="task">V povedi označi besedo: <span class="target" id="target"></span></p>
+<label for="sentence">Besedilo za označevanje</label>
+<textarea id="sentence" readonly spellcheck="false" aria-describedby="hint" aria-label="Poved za označevanje besede"></textarea>
+<div id="feedback" class="feedback" role="status" aria-live="polite">Označi iskano besedo z miško.</div>
+<div class="bottom"><button id="next" type="button">Druga naloga</button><span class="score" id="score">Pravilno rešene naloge: 0</span></div>
+<p class="hint" id="hint">Postavi kazalec pred besedo, pritisni levi gumb miške in povleci do konca besede. Nato spusti gumb. Besedo lahko označiš tudi z dvoklikom. Dovoljen je presledek pred besedo ali za njo, ločila pa izpusti.</p>
+</section></main>
+<script>
+'use strict';
+const sentences = [
+'Naša mačka rada spi na mehkem kavču.',
+'Na šolskem vrtu rastejo pisane rože.',
+'Luka je v knjižnici izbral zanimivo knjigo.',
+'Po dežju se je na nebu pojavila mavrica.',
+'Učenci so na igrišču igrali košarko.',
+'Moja sestra vsak večer posluša glasbo.',
+'V gozdu smo opazili majhno veverico.',
+'Babica je za kosilo skuhala okusno juho.',
+'Na izlet smo vzeli vodo in sendviče.',
+'Zjutraj je pred hišo zapadel prvi sneg.',
+'Na mizi ležijo svinčnik, radirka in zvezek.',
+'Peter je prijatelju pokazal novo kolo.',
+'V računalniški učilnici ustvarjamo zanimive igre.',
+'Čez most je počasi zapeljal moder avtobus.',
+'Na travniku se pasejo ovce in koze.',
+'Nina je narisala hišo z velikimi okni.',
+'V nedeljo bomo obiskali bližnji muzej.',
+'Veter je po dvorišču raznašal suho listje.',
+'Na morju smo zgradili velik peščeni grad.',
+'Učiteljica je na tablo napisala novo nalogo.',
+'Zvečer na nebu zasijejo svetle zvezde.',
+'Majhen pes je veselo mahal z repom.',
+'V kuhinji diši po sveže pečenem kruhu.',
+'Maja je skrbno zalila rastline na balkonu.',
+'Naš razred pripravlja predstavo za starše.',
+'Na postaji smo čakali na prihod vlaka.',
+'Žan je v nahrbtnik pospravil športne copate.',
+'Ob potoku smo našli lep okrogel kamen.',
+'Tina je na računalniku napisala kratko zgodbo.',
+'Po pouku smo skupaj odšli na sprehod.'
+];
+const editor=document.getElementById('sentence');
+const target=document.getElementById('target');
+const feedback=document.getElementById('feedback');
+const next=document.getElementById('next');
+let current, solved=false, count=0, deck=[];
+function shuffled(values){const a=[...values];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function setFeedback(text,kind=''){feedback.textContent=text;feedback.className='feedback'+(kind?' '+kind:'');}
+function newTask(){
+ if(!deck.length){deck=shuffled(sentences);if(deck[deck.length-1]===current?.sentence)[deck[0],deck[deck.length-1]]=[deck[deck.length-1],deck[0]];}
+ const sentence=deck.pop();
+ const words=[...sentence.matchAll(/[A-Za-zČŠŽčšž]+/g)].filter(m=>m[0].length>=3);
+ const word=words[Math.floor(Math.random()*words.length)];
+ current={sentence,word:word[0],start:word.index,end:word.index+word[0].length};
+ solved=false;editor.value=sentence;editor.setSelectionRange(0,0);editor.scrollTop=0;target.textContent=current.word;
+ next.textContent='Druga naloga';setFeedback('Označi iskano besedo z miško.');
+}
+function validSelection(text,start,end,wordStart,wordEnd){
+ if(start===end||start>wordStart||end<wordEnd)return false;
+ return /^ *$/.test(text.slice(start,wordStart)) && /^ *$/.test(text.slice(wordEnd,end));
+}
+function check(){
+ if(solved||editor.selectionStart===editor.selectionEnd)return;
+ if(validSelection(current.sentence,editor.selectionStart,editor.selectionEnd,current.start,current.end)){
+ solved=true;count++;document.getElementById('score').textContent='Pravilno rešene naloge: '+count;
+ const praise=['Odlično!','Bravo!','Pravilno!','Zelo dobro!'];setFeedback(praise[Math.floor(Math.random()*praise.length)],'good');next.textContent='Naslednja naloga';
+ }else setFeedback('Poskusi znova.','bad');
+}
+// Počakamo na brskalnikovo končno posodobitev izbora, tudi pri dvokliku.
+editor.addEventListener('pointerup',()=>setTimeout(check,0));
+editor.addEventListener('dblclick',()=>setTimeout(check,0));
+editor.addEventListener('keyup',e=>{if(e.key==='Shift'||e.key.startsWith('Arrow'))check();});
+next.addEventListener('click',newTask);
+newTask();
+</script>
+</body>
+</html>
